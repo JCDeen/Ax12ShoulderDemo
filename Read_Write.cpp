@@ -124,37 +124,36 @@ int main()
 // Print communication result
 void PrintCommStatus(int CommStatus)
 {
+	char *StatusMsg[8] = {
+		"COMM_TXSUCCESS: TX Success",
+		"COMM_RXSUCCESS: RX Success",
+		"COMM_TXFAIL: Failed transmit instruction packet",
+		"COMM_RXFAIL: Failed get status packet from device",
+		"COMM_TXERROR: Incorrect instruction packet!",
+		"COMM_RXWAITING: Now receiving status packet",
+		"COMM_RXTIMEOUT: There is no status packet",
+		"COMM_RXCORRUPT: Incorrect status packet"
+	};
+
 	switch(CommStatus)
 	{
-	case COMM_TXFAIL:
-		printf("COMM_TXFAIL: Failed transmit instruction packet!\n");
-		break;
+		case COMM_TXSUCCESS:
+		case COMM_RXSUCCESS:
+		case COMM_TXFAIL:
+		case COMM_RXFAIL:
+		case COMM_TXERROR:
+		case COMM_RXWAITING:
+		case COMM_RXTIMEOUT:
+		case COMM_RXCORRUPT:
+			printf("%s\n", StatusMsg[CommStatus]);
+			break;
 
-	case COMM_TXERROR:
-		printf("COMM_TXERROR: Incorrect instruction packet!\n");
-		break;
-
-	case COMM_RXFAIL:
-		printf("COMM_RXFAIL: Failed get status packet from device!\n");
-		break;
-
-	case COMM_RXWAITING:
-		printf("COMM_RXWAITING: Now receiving status packet!\n");
-		break;
-
-	case COMM_RXTIMEOUT:
-		printf("COMM_RXTIMEOUT: There is no status packet!\n");
-		break;
-
-	case COMM_RXCORRUPT:
-		printf("COMM_RXCORRUPT: Incorrect status packet!\n");
-		break;
-
-	default:
-		printf("This is unknown error code!\n");
-		break;
+		default:
+			printf("This is unknown error code!\n");
+			break;
 	}
 }
+
 
 // Print error bit of status packet
 void PrintErrorCode()
