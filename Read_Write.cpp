@@ -6,6 +6,7 @@
 
 #pragma comment(lib, "dynamixel.lib")
 
+
 // Control table address
 #define P_GOAL_POSITION_L		30
 #define P_GOAL_POSITION_H		31
@@ -13,16 +14,10 @@
 #define P_PRESENT_POSITION_H	37
 #define P_MOVING				46
 
-// Defualt setting
+// Defulat setting
 #define DEFAULT_PORTNUM		3 // COM3
 #define DEFAULT_BAUDNUM		1 // 1Mbps
-
-#define RIGHT_SHOULDER_YAW		2
-#define RIGHT_SHOULDER_PITCH	25
-#define RIGHT_SHOULDER_ROLL		9
-#define LEFT_SHOULDER_YAW		11
-#define LEFT_SHOULDER_PITCH		20
-#define LEFT_SHOULDER_ROLL		22
+#define DEFAULT_ID			104
 
 
 void PrintCommStatus(int CommStatus);
@@ -30,24 +25,11 @@ void PrintErrorCode();
 
 int main()
 {
-	int GoalPos[2] = { 400, 750 };
-	//int GoalPos[2] = { 0, 1023 };
-	//int GoalPos[2] = {0, 4095}; // for EX series
-
-	int ActuatorIdArray[] = { 
-		RIGHT_SHOULDER_YAW, 
-		RIGHT_SHOULDER_PITCH, 
-		RIGHT_SHOULDER_ROLL, 
-		LEFT_SHOULDER_YAW, 
-		LEFT_SHOULDER_PITCH, 
-		LEFT_SHOULDER_ROLL};
+	int GoalPos[2] = {0, 1023};
+	//int GoalPos[2] = {0, 4095}; // for EX serise
 	int index = 0;
 	int Moving, PresentPos;
 	int CommStatus;
-
-	int indexActuator = 0;
-
-	printf("starting for Cdeen\n");
 
 	// Open device
 	if( dxl_initialize(DEFAULT_PORTNUM, DEFAULT_BAUDNUM) == 0 )
@@ -66,17 +48,16 @@ int main()
 		if(getch() == 0x1b)
 			break;
 
-			// Write goal position
-		int theActuatorId = ActuatorIdArray[ indexActuator ];
-		dxl_write_word( theActuatorId, P_GOAL_POSITION_L, GoalPos[index] );
+		// Write goal position
+		dxl_write_word( DEFAULT_ID, P_GOAL_POSITION_L, GoalPos[index] );
 		do
 		{
 			// Read present position
-			PresentPos = dxl_read_word( theActuatorId, P_PRESENT_POSITION_L );
+			PresentPos = dxl_read_word( DEFAULT_ID, P_PRESENT_POSITION_L );
 			CommStatus = dxl_get_result();
 			if( CommStatus == COMM_RXSUCCESS )
 			{
-				printf( "%d %d %d %d\n", theActuatorId, indexActuator, GoalPos[index], PresentPos );
+				printf( "%d   %d\n",GoalPos[index], PresentPos );
 				PrintErrorCode();
 			}
 			else
@@ -86,7 +67,7 @@ int main()
 			}
 
 			// Check moving done
-			Moving = dxl_read_byte( theActuatorId, P_MOVING );
+			Moving = dxl_read_byte( DEFAULT_ID, P_MOVING );
 			CommStatus = dxl_get_result();
 			if( CommStatus == COMM_RXSUCCESS )
 			{
@@ -106,11 +87,7 @@ int main()
 				PrintCommStatus(CommStatus);
 				break;
 			}
-
-			indexActuator++;
-			if (indexActuator > 5)
-			   indexActuator = 0;
-
+			
 		}while(Moving == 1);
 	}
 
@@ -124,36 +101,37 @@ int main()
 // Print communication result
 void PrintCommStatus(int CommStatus)
 {
-	char *StatusMsg[8] = {
-		"COMM_TXSUCCESS: TX Success",
-		"COMM_RXSUCCESS: RX Success",
-		"COMM_TXFAIL: Failed transmit instruction packet",
-		"COMM_RXFAIL: Failed get status packet from device",
-		"COMM_TXERROR: Incorrect instruction packet!",
-		"COMM_RXWAITING: Now receiving status packet",
-		"COMM_RXTIMEOUT: There is no status packet",
-		"COMM_RXCORRUPT: Incorrect status packet"
-	};
-
 	switch(CommStatus)
 	{
-		case COMM_TXSUCCESS:
-		case COMM_RXSUCCESS:
-		case COMM_TXFAIL:
-		case COMM_RXFAIL:
-		case COMM_TXERROR:
-		case COMM_RXWAITING:
-		case COMM_RXTIMEOUT:
-		case COMM_RXCORRUPT:
-			printf("%s\n", StatusMsg[CommStatus]);
-			break;
+	case COMM_TXFAIL:
+		printf("COMM_TXFAIL: Failed transmit instruction packet!\n");
+		break;
 
-		default:
-			printf("This is unknown error code!\n");
-			break;
+	case COMM_TXERROR:
+		printf("COMM_TXERROR: Incorrect instruction packet!\n");
+		break;
+
+	case COMM_RXFAIL:
+		printf("COMM_RXFAIL: Failed get status packet from device!\n");
+		break;
+
+	case COMM_RXWAITING:
+		printf("COMM_RXWAITING: Now recieving status packet!\n");
+		break;
+
+	case COMM_RXTIMEOUT:
+		printf("COMM_RXTIMEOUT: There is no status packet!\n");
+		break;
+
+	case COMM_RXCORRUPT:
+		printf("COMM_RXCORRUPT: Incorrect status packet!\n");
+		break;
+
+	default:
+		printf("This is unknown error code!\n");
+		break;
 	}
 }
-
 
 // Print error bit of status packet
 void PrintErrorCode()
